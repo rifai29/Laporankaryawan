@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alfamidi HR - Mutakhir v1.0.4</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #e1211a; --accent: #ffcf00; --bg: #f8f8f8; --dark: #333; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--dark); padding-bottom: 50px; }
+        
+        /* Navbar */
+        .navbar { background: var(--primary); height: 60px; display: flex; align-items: center; padding: 0 20px; position: fixed; top: 0; width: 100%; z-index: 1000; box-sizing: border-box; border-bottom: 4px solid var(--accent); color: white; justify-content: space-between; }
+        .nav-left { display: flex; align-items: center; gap: 15px; }
+        .hamburger { cursor: pointer; width: 20px; height: 15px; display: flex; flex-direction: column; justify-content: space-between; }
+        .hamburger span { display: block; height: 2px; background: white; width: 100%; }
+
+        /* Content */
+        .container { padding: 80px 15px 20px; max-width: 600px; margin: auto; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid var(--primary); }
+        
+        /* Stats Dashboard */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: white; padding: 15px; border-radius: 10px; text-align: center; border-bottom: 3px solid var(--accent); }
+        .stat-val { font-size: 20px; font-weight: 700; color: var(--primary); display: block; }
+        .stat-lab { font-size: 11px; text-transform: uppercase; color: #888; }
+
+        /* Form & Input */
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #666; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        
+        .btn { padding: 14px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-family: 'Inter'; transition: 0.2s; }
+        .btn-add { background: var(--primary); color: white; margin-top: 10px; }
+        .btn-export { background: #27ae60; color: white; margin-top: 10px; font-size: 13px; }
+        .btn-add:active { transform: scale(0.98); }
+
+        /* Table */
+        .table-container { background: white; border-radius: 12px; overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 400px; }
+        th { background: #eee; padding: 12px; text-align: left; font-size: 12px; }
+        td { padding: 12px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+        .nik-tag { font-family: monospace; font-weight: bold; color: #444; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-left">
+        <div class="hamburger"><span></span><span></span><span></span></div>
+        <span style="font-weight: 700;">ALFAMIDI HR</span>
+    </div>
+    <span style="font-size: 10px; opacity: 0.8;">v1.0.4</span>
+</nav>
+
+<div class="container">
+    <div class="stats-grid">
+        <div class="stat-box">
+            <span class="stat-val" id="countTotal">0</span>
+            <span class="stat-lab">Total Karyawan</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-val" id="countNew">0</span>
+            <span class="stat-lab">Tahun Ini</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="input-group">
+            <label>NIK (Contoh: 0225106927)</label>
+            <input type="number" id="nik" placeholder="Masukkan NIK..." oninput="hitungMasaKerja()">
+        </div>
+        <div class="input-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="nama" placeholder="Sesuai KTP...">
+        </div>
+        <div class="input-group">
+            <label>Masa Kerja Terdeteksi</label>
+            <input type="text" id="masaKerja" readonly style="background:#f1f1f1; color:#e1211a; font-weight:700">
+        </div>
+        <button class="btn btn-add" onclick="simpanData()">SIMPAN DATA</button>
+        <button class="btn btn-export" onclick="eksporExcel()">UNDUH LAPORAN (CSV)</button>
+    </div>
+
+    <div class="table-container">
+        <table id="tabelKaryawan">
+            <thead>
+                <tr>
+                    <th>NIK</th>
+                    <th>NAMA</th>
+                    <th>MASA KERJA</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('midi_hr_v1')) || [];
+
+    function hitungMasaKerja() {
+        const nik = document.getElementById('nik').value;
+        const out = document.getElementById('masaKerja');
+        if (nik.length >= 6) {
+            const thn = parseInt("20" + nik.substring(2, 4));
+            const bln = parseInt(nik.substring(4, 6));
+            const sekarang = new Date(2026, 0); // Januari 2026
+            const masuk = new Date(thn, bln - 1);
+            
+            const totalBln = (sekarang.getFullYear() - masuk.getFullYear()) * 12 + (sekarang.getMonth() - masuk.getMonth());
+            
+            if (totalBln < 0) out.value = "Belum Masuk";
+            else {
+                const y = Math.floor(totalBln / 12);
+                const m = totalBln % 12;
+                out.value = `${y} Thn ${m} Bln`;
+            }
+        } else { out.value = ""; }
+    }
+
+    function simpanData() {
+        const nik = document.getElementById('nik').value;
+        const nama = document.getElementById('nama').value;
+        const masa = document.getElementById('masaKerja').value;
+
+        if(!nik || !nama) return alert("Lengkapi data!");
+
+        db.push({ nik, nama, masa, thnMasuk: nik.substring(2,4) });
+        localStorage.setItem('midi_hr_v1', JSON.stringify(db));
+        
+        render();
+        // Reset
+        document.getElementById('nik').value = '';
+        document.getElementById('nama').value = '';
+        document.getElementById('masaKerja').value = '';
+    }
+
+    function render() {
+        const tbody = document.querySelector('#tabelKaryawan tbody');
+        tbody.innerHTML = '';
+        db.forEach(item => {
+            tbody.innerHTML += `<tr>
+                <td class="nik-tag">${item.nik}</td>
+                <td>${item.nama.toUpperCase()}</td>
+                <td>${item.masa}</td>
+            </tr>`;
+        });
+
+        // Update Stats
+        document.getElementById('countTotal').innerText = db.length;
+        document.getElementById('countNew').innerText = db.filter(k => k.thnMasuk === '25' || k.thnMasuk === '26').length;
+    }
+
+    function eksporExcel() {
+        if(db.length === 0) return alert("Tidak ada data untuk diekspor");
+        let csv = "NIK,Nama,Masa Kerja\n";
+        db.forEach(item => {
+            csv += `${item.nik},${item.nama},${item.masa}\n`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'Laporan_Karyawan_Alfamidi.csv');
+        a.click();
+    }
+
+    render();
+</script>
+
+</body>
+</html>
