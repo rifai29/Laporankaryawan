@@ -2,285 +2,276 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alfamidi HR - Soft Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Alfamidi HR</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --primary: #c1121c; 
-            --accent: #ffcf00; 
-            --bg: #f8fafc; 
-            --text-dark: #1e293b;
-            --border-light: #e2e8f0;
-            --success: #10b981;
-        }
+        :root { --primary: #c1121c; --bg: #f8fafc; --text: #1e293b; --border: #e2e8f0; --blue: #0284c7; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 30px; }
         
-        body { 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; 
-            background: var(--bg); 
-            color: var(--text-dark); 
-            padding-bottom: 40px; 
-        }
+        .navbar { background: white; height: 60px; display: flex; align-items: center; padding: 0 20px; position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid var(--border); box-sizing: border-box; }
+        .brand { font-weight: 700; color: var(--primary); font-size: 18px; }
 
-        /* Header */
-        .navbar { 
-            background: white; height: 65px; display: flex; align-items: center; 
-            padding: 0 20px; position: fixed; top: 0; width: 100%; z-index: 1000; 
-            box-sizing: border-box; border-bottom: 1px solid var(--border-light); 
-            justify-content: space-between;
-        }
-        .brand { font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
+        .container { padding: 75px 15px 20px; max-width: 450px; margin: auto; }
 
-        .container { padding: 85px 16px 20px; max-width: 500px; margin: auto; }
-
-        /* Cards & Stats */
-        .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { 
-            background: white; padding: 16px; border-radius: 12px; 
-            border-top: 4px solid var(--primary); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-        .stat-val { font-size: 24px; font-weight: 700; color: var(--text-dark); display: block; }
+        /* Stats Card */
+        .stat-card { background: white; padding: 15px; border-radius: 10px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; cursor: pointer; margin-bottom: 15px; }
+        .stat-val { font-size: 24px; font-weight: 700; display: block; color: var(--primary); }
         .stat-lab { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; }
 
-        .main-card { 
-            background: white; border-radius: 12px; padding: 20px; 
-            border-top: 4px solid var(--primary); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-
-        /* Inputs */
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #475569; }
+        /* Main Card Form */
+        .main-card { background: white; border-radius: 12px; padding: 20px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 5px; color: #475569; }
+        
         input { 
-            width: 100%; padding: 12px; border: 1px solid var(--border-light); 
-            border-radius: 8px; box-sizing: border-box; font-size: 14px; 
-            background: #fdfdfd; transition: 0.3s;
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; 
+            font-size: 16px; background: #fdfdfd; 
         }
-        input:focus { border-color: var(--primary); outline: none; background: white; }
+        input:focus { border-color: var(--primary); outline: none; }
+        input:disabled { background: #f1f5f9; color: #1e293b; font-weight: 700; }
+
+        /* Buttons */
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; color: white; margin-top: 5px; }
+        .btn-save { background: var(--primary); }
+        .btn-update { background: var(--blue); }
+        .btn-batal { background: #64748b; margin-top: 10px; font-size: 12px; padding: 10px; }
 
         /* Nav List */
-        .nav-list { background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-light); }
-        .nav-item { 
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 16px; border-bottom: 1px solid var(--border-light);
-            cursor: pointer; transition: 0.2s;
-        }
+        .nav-list { background: white; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; overflow: hidden; }
+        .nav-item { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; cursor: pointer; }
         .nav-item:last-child { border-bottom: none; }
-        .nav-item:active { background: #f1f5f9; }
-        .nav-text { font-weight: 700; font-size: 14px; }
-        .chevron { color: #cbd5e1; font-size: 14px; }
 
-        /* Scroll Table */
-        .scroll-container { 
-            background: white; border-radius: 12px; max-height: 200px; 
-            overflow-y: auto; margin-top: 15px; border: 1px solid var(--border-light);
-        }
+        /* Table Area */
+        .scroll-area { background: white; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #f8fafc; padding: 12px; text-align: left; font-size: 11px; font-weight: 700; color: #64748b; border-bottom: 1px solid var(--border-light); }
-        td { padding: 12px; font-size: 13px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        th { background: #f8fafc; padding: 10px; text-align: left; font-size: 10px; color: #64748b; border-bottom: 1px solid var(--border); }
+        td { padding: 12px 10px; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
 
-        .btn-primary { 
-            background: var(--primary); color: white; border: none; 
-            padding: 14px; border-radius: 8px; width: 100%; 
-            font-weight: 700; cursor: pointer; margin-top: 5px;
-        }
+        /* Color Buttons Only */
+        .action-cell { display: flex; gap: 5px; }
+        .color-btn { border: none; padding: 8px 10px; border-radius: 5px; color: white; font-size: 10px; font-weight: 700; cursor: pointer; text-align: center; flex: 1; }
+        .bg-edit { background: var(--blue); }
+        .bg-del { background: var(--primary); }
 
-        /* CUSTOM MODAL (CONFIRMATION) */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: none; align-items: center;
-            justify-content: center; z-index: 3000; padding: 20px; box-sizing: border-box;
-        }
-        .modal-content {
-            background: white; padding: 24px; border-radius: 16px; width: 100%;
-            max-width: 320px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-        }
-        .modal-title { font-weight: 700; font-size: 18px; margin-bottom: 10px; }
-        .modal-desc { font-size: 14px; color: #64748b; margin-bottom: 20px; line-height: 1.5; }
-        .modal-buttons { display: flex; gap: 10px; }
-        .btn-modal { flex: 1; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; font-size: 14px; }
-        .btn-cancel { background: #f1f5f9; color: #475569; }
-        .btn-confirm { background: var(--primary); color: white; }
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; box-sizing: border-box; }
+        .modal-box { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
 
-        /* Toast */
-        #toast {
-            visibility: hidden; min-width: 200px; background: #333; color: white;
-            text-align: center; border-radius: 10px; padding: 14px; position: fixed;
-            z-index: 4000; left: 50%; bottom: 30px; transform: translateX(-50%);
-            font-size: 13px; font-weight: 600;
-        }
-        #toast.show { visibility: visible; animation: fadeInUp 0.5s; }
-        #toast.success { background: var(--success); }
+        #toast { visibility: hidden; background: #334155; color: white; padding: 12px 20px; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); border-radius: 8px; font-size: 12px; z-index: 3000; }
+        #toast.show { visibility: visible; }
     </style>
 </head>
 <body>
 
-<nav class="navbar">
-    <div class="brand">HR</div>
-    <div style="font-size: 12px; font-weight: 600; color: #94a3b8;">v1.0.4</div>
-</nav>
+<nav class="navbar"><div class="brand">ALFAMIDI HR</div></nav>
 
 <div class="container">
-    <div class="stats-row">
-        <div class="stat-card">
-            <span class="stat-lab">Total Staff</span>
-            <span class="stat-val" id="countTotal">0</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-lab">Baru</span>
-            <span class="stat-val" id="countNew">0</span>
-        </div>
+    <div class="stat-card" onclick="bukaDaftar()">
+        <span class="stat-lab">Total Karyawan</span>
+        <span class="stat-val" id="totalCount">0</span>
     </div>
 
     <div class="main-card">
         <div class="input-group">
-            <label>NIK KARYAWAN</label>
-            <input type="number" id="nik" placeholder="0225..." oninput="hitungMasaKerja()">
+            <label>NIK</label>
+            <input type="tel" id="nik" placeholder="Input NIK" oninput="handleNIK()">
         </div>
         <div class="input-group">
-            <label>NAMA LENGKAP</label>
-            <input type="text" id="nama" placeholder="Sesuai ID Card">
+            <label>NAMA</label>
+            <input type="text" id="nama" placeholder="Input Nama" oninput="handleNama()">
         </div>
         <div class="input-group">
             <label>MASA KERJA</label>
-            <input type="text" id="masaKerja" readonly style="color: var(--primary); font-weight: 700;">
+            <input type="text" id="masa" readonly style="background:#fff1f2; color:var(--primary); font-weight:700; border:none;">
         </div>
-        <button class="btn-primary" onclick="simpanData()">SIMPAN DATA</button>
+        <button class="btn btn-save" id="btnSimpan" onclick="simpan()">SIMPAN DATA</button>
+        <button class="btn btn-batal" id="btnBatal" onclick="reset()" style="display:none;">BATAL PERBARUI</button>
     </div>
 
     <div class="nav-list">
-        <div class="nav-item" onclick="openExportModal()">
-            <span class="nav-text">Unduh Laporan (CSV)</span>
-            <span class="chevron">❯</span>
-        </div>
-        <label class="nav-item" for="importCsv">
-            <span class="nav-text">Impor Data Excel (CSV)</span>
-            <span class="chevron">❯</span>
-            <input type="file" id="importCsv" accept=".csv" style="display: none;" onchange="imporData(this)">
+        <div class="nav-item" onclick="unduh()"><span>Unduh Excel</span></div>
+        <label class="nav-item" style="margin:0; cursor:pointer;">
+            <span>Impor Excel</span>
+            <input type="file" accept=".xlsx, .xls, .csv" style="display:none" onchange="impor(this)">
         </label>
     </div>
 
-    <div class="scroll-container">
-        <table id="tabelKaryawan">
-            <thead>
-                <tr>
-                    <th>NIK</th>
-                    <th>NAMA</th>
-                    <th>MASA</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
+    <div class="scroll-area">
+        <table>
+            <thead><tr><th style="width:30%">NIK</th><th style="width:40%">NAMA</th><th style="width:30%">AKSI</th></tr></thead>
+            <tbody id="tabelBody"></tbody>
         </table>
     </div>
 </div>
 
-<div class="modal-overlay" id="modalExport">
-    <div class="modal-content">
-        <div class="modal-title">Konfirmasi Unduh</div>
-        <div class="modal-desc">Apakah Anda yakin ingin mengunduh semua data karyawan dalam format CSV?</div>
-        <div class="modal-buttons">
-            <button class="btn-modal btn-cancel" onclick="closeModal()">Batal</button>
-            <button class="btn-modal btn-confirm" onclick="konfirmasiEkspor()">Ya, Unduh</button>
+<div class="modal" id="modalList">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0; font-size:16px;">Daftar Karyawan</h3>
+            <b style="cursor:pointer; font-size:20px;" onclick="tutupDaftar()">X</b>
         </div>
+        <div id="listDetail"></div>
     </div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('midi_hr_v1')) || [];
+    let db = JSON.parse(localStorage.getItem('hr_midi_db_final')) || [];
+    let sedangEdit = false;
 
-    function showToast(msg, type="success") {
-        const t = document.getElementById("toast");
-        t.innerText = msg;
-        t.className = "show " + type;
-        setTimeout(() => { t.className = ""; }, 3000);
-    }
+    // Hitung Masa Kerja (Januari 2026)
+    function hitungMasa(nik) {
+        if (!nik || nik.length < 6) return "";
+        const thn = parseInt("20" + nik.substring(2, 4));
+        const bln = parseInt(nik.substring(4, 6));
+        if (isNaN(thn) || isNaN(bln)) return "";
 
-    /* Modal Logic */
-    function openExportModal() {
-        if(db.length === 0) return showToast("Tidak ada data!", "error");
-        document.getElementById('modalExport').style.display = 'flex';
-    }
-    function closeModal() {
-        document.getElementById('modalExport').style.display = 'none';
-    }
-    function konfirmasiEkspor() {
-        closeModal();
-        eksporExcel();
+        const skr = new Date(2026, 0); 
+        const msk = new Date(thn, bln - 1);
+        const selisih = (skr.getFullYear() - msk.getFullYear()) * 12 + (skr.getMonth() - msk.getMonth());
+        
+        if (selisih < 0) return "Baru";
+        return Math.floor(selisih/12) + " Thn " + (selisih%12) + " Bln";
     }
 
-    /* Logic Fitur */
-    function hitungMasaKerja() {
-        const nik = document.getElementById('nik').value;
-        const out = document.getElementById('masaKerja');
-        if (nik.length >= 6) {
-            const thn = parseInt("20" + nik.substring(2, 4));
-            const bln = parseInt(nik.substring(4, 6));
-            const sekarang = new Date(2026, 0); 
-            const masuk = new Date(thn, bln - 1);
-            const totalBln = (sekarang.getFullYear() - masuk.getFullYear()) * 12 + (sekarang.getMonth() - masuk.getMonth());
-            out.value = totalBln < 0 ? "Belum Masuk" : `${Math.floor(totalBln/12)} Thn ${totalBln%12} Bln`;
-        } else { out.value = ""; }
+    function handleNIK() {
+        const el = document.getElementById('nik');
+        el.value = el.value.replace(/[^0-9]/g, '');
+        document.getElementById('masa').value = hitungMasa(el.value);
+
+        if(!sedangEdit) {
+            const temu = db.find(i => i.nik === el.value);
+            if(temu) {
+                document.getElementById('nama').value = temu.nama;
+                showToast("Data dimuat");
+            }
+        }
     }
 
-    function simpanData() {
+    function handleNama() {
+        const el = document.getElementById('nama');
+        el.value = el.value.replace(/[0-9]/g, '').toUpperCase();
+    }
+
+    function simpan() {
         const nik = document.getElementById('nik').value;
         const nama = document.getElementById('nama').value;
-        const masa = document.getElementById('masaKerja').value;
-        if(!nik || !nama) return showToast("Lengkapi form!", "error");
-        
-        db.unshift({ nik, nama, masa, thnMasuk: nik.substring(2,4) });
-        localStorage.setItem('midi_hr_v1', JSON.stringify(db));
-        showToast("Data Tersimpan");
+        const masa = hitungMasa(nik);
+
+        if(!nik || !nama) return showToast("Lengkapi NIK & Nama!");
+
+        const idx = db.findIndex(i => i.nik === nik);
+        if(idx !== -1) {
+            db[idx] = { nik, nama, masa };
+            showToast("Berhasil diperbarui");
+        } else {
+            db.unshift({ nik, nama, masa });
+            showToast("Berhasil disimpan");
+        }
+        reset();
         render();
-        document.querySelectorAll('input').forEach(i => i.value = '');
+    }
+
+    function siapEdit(nik) {
+        const d = db.find(i => i.nik === nik);
+        const elNik = document.getElementById('nik');
+        elNik.value = d.nik;
+        elNik.disabled = true;
+        document.getElementById('nama').value = d.nama;
+        document.getElementById('masa').value = hitungMasa(d.nik);
+        
+        const b = document.getElementById('btnSimpan');
+        b.innerText = "PERBARUI DATA";
+        b.className = "btn btn-update";
+        document.getElementById('btnBatal').style.display = "block";
+        sedangEdit = true;
+        tutupDaftar();
+    }
+
+    function reset() {
+        document.getElementById('nik').value = '';
+        document.getElementById('nik').disabled = false;
+        document.getElementById('nama').value = '';
+        document.getElementById('masa').value = '';
+        const b = document.getElementById('btnSimpan');
+        b.innerText = "SIMPAN DATA";
+        b.className = "btn btn-save";
+        document.getElementById('btnBatal').style.display = "none";
+        sedangEdit = false;
     }
 
     function render() {
-        const tbody = document.querySelector('#tabelKaryawan tbody');
-        tbody.innerHTML = db.map(i => `<tr>
-            <td style="font-family:monospace; font-weight:600">${i.nik}</td>
-            <td style="text-transform:uppercase">${i.nama}</td>
-            <td>${i.masa}</td>
+        localStorage.setItem('hr_midi_db_final', JSON.stringify(db));
+        const tbody = document.getElementById('tabelBody');
+        tbody.innerHTML = db.slice(0, 10).map(i => `<tr>
+            <td style="font-weight:700">${i.nik}</td>
+            <td>${i.nama}</td>
+            <td>
+                <div class="action-cell">
+                    <button class="color-btn bg-edit" onclick="siapEdit('${i.nik}')">EDIT</button>
+                    <button class="color-btn bg-del" onclick="hapus('${i.nik}')">HAPUS</button>
+                </div>
+            </td>
         </tr>`).join('');
-        document.getElementById('countTotal').innerText = db.length;
-        document.getElementById('countNew').innerText = db.filter(k => k.thnMasuk === '25' || k.thnMasuk === '26').length;
+        document.getElementById('totalCount').innerText = db.length;
     }
 
-    function eksporExcel() {
-        let csv = "NIK,Nama,Masa Kerja\n";
-        db.forEach(i => { csv += `${i.nik},${i.nama},${i.masa}\n`; });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'Laporan_Midi_HR.csv';
-        a.click();
-        showToast("Laporan Diunduh");
+    function hapus(nik) {
+        if(confirm("Hapus " + nik + "?")) {
+            db = db.filter(i => i.nik !== nik);
+            render();
+            if(document.getElementById('modalList').style.display === 'flex') bukaDaftar();
+        }
     }
 
-    // Fungsi Impor Data
-    function imporData(input) {
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const lines = e.target.result.split('\n');
-            for(let i = 1; i < lines.length; i++) {
-                const cols = lines[i].split(',');
-                if(cols.length >= 2) {
-                    db.unshift({ nik: cols[0], nama: cols[1], masa: cols[2] || '-', thnMasuk: cols[0].substring(2,4) });
+    function bukaDaftar() {
+        const box = document.getElementById('listDetail');
+        box.innerHTML = db.map(i => `
+            <div style="padding:12px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:12px;"><b>${i.nama}</b><br>${i.nik} | ${i.masa}</div>
+                <div style="display:flex; gap:5px; width:40%;">
+                    <button class="color-btn bg-edit" onclick="siapEdit('${i.nik}')">EDIT</button>
+                    <button class="color-btn bg-del" onclick="hapus('${i.nik}')">HAPUS</button>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('modalList').style.display = 'flex';
+    }
+
+    function tutupDaftar() { document.getElementById('modalList').style.display = 'none'; }
+    function showToast(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(() => t.className = "", 2000); }
+
+    function unduh() {
+        const ws = XLSX.utils.json_to_sheet(db.map(i => ({"NIK":i.nik, "NAMA":i.nama, "MASA KERJA":i.masa})));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Data");
+        XLSX.writeFile(wb, "Data_Karyawan.xlsx");
+    }
+
+    function impor(input) {
+        const r = new FileReader();
+        r.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, {type:'array'});
+            const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
+            for(let i=1; i<json.length; i++) {
+                if(json[i][0]) {
+                    const nik = json[i][0].toString().trim();
+                    const nama = (json[i][1] || "NO NAME").toString().toUpperCase();
+                    const masaAuto = hitungMasa(nik);
+                    const idx = db.findIndex(d => d.nik === nik);
+                    if(idx !== -1) { db[idx].nama = nama; db[idx].masa = masaAuto; }
+                    else { db.push({nik, nama, masa: masaAuto}); }
                 }
             }
-            localStorage.setItem('midi_hr_v1', JSON.stringify(db));
-            render();
-            showToast("Impor Berhasil!");
+            render(); showToast("Impor Selesai");
         };
-        reader.readAsText(file);
+        r.readAsArrayBuffer(input.files[0]);
     }
-
     render();
 </script>
-
 </body>
 </html>
